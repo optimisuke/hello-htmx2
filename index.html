@@ -10,6 +10,7 @@
       hx-ext="path-params"
       hx-get="https://pokeapi.co/api/v2/pokemon/{id}"
       hx-target="#result"
+      hx-swap="none"
     >
       <input
         name="id"
@@ -21,6 +22,124 @@
       <button type="submit">取得</button>
     </form>
 
-    <pre id="result"></pre>
+    <section id="result">
+      <table border="1" cellpadding="6" cellspacing="0">
+        <thead>
+          <tr>
+            <th colspan="2">ポケモン情報</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">名前</th>
+            <td id="pokemon-name">-</td>
+          </tr>
+          <tr>
+            <th scope="row">日本語名</th>
+            <td id="pokemon-name-ja">-</td>
+          </tr>
+          <tr>
+            <th scope="row">ID</th>
+            <td id="pokemon-id">-</td>
+          </tr>
+          <tr>
+            <th scope="row">高さ</th>
+            <td id="pokemon-height">-</td>
+          </tr>
+          <tr>
+            <th scope="row">重さ</th>
+            <td id="pokemon-weight">-</td>
+          </tr>
+          <tr>
+            <th scope="row">タイプ</th>
+            <td id="pokemon-types">-</td>
+          </tr>
+          <tr>
+            <th scope="row">とくせい</th>
+            <td id="pokemon-abilities">-</td>
+          </tr>
+          <tr>
+            <th scope="row">ステータス</th>
+            <td id="pokemon-stats">-</td>
+          </tr>
+          <tr>
+            <th scope="row">アイコン</th>
+            <td id="pokemon-sprite">-</td>
+          </tr>
+        </tbody>
+      </table>
+      <p id="pokemon-error" style="color: red"></p>
+    </section>
+
+    <script>
+      const setText = (id, text) => {
+        const cell = document.getElementById(id);
+        cell.textContent = text;
+      };
+
+      const setSprite = (url) => {
+        const cell = document.getElementById("pokemon-sprite");
+        cell.innerHTML = url
+          ? `<img src="${url}" alt="ポケモンの画像" width="96" height="96" />`
+          : "-";
+      };
+
+      const fetchJapaneseName = async (pokemonId) => {
+        const errorBox = document.getElementById("pokemon-error");
+        setText("pokemon-name-ja", "読み込み中...");
+        try {
+          const res = await fetch(
+            `https://pokeapi.co/api/v2/pokemon-species/${pokemonId}`
+          );
+          if (!res.ok) throw new Error("species fetch failed");
+          const data = await res.json();
+          const jaEntry =
+            (data.names || []).find((n) => n.language?.name === "ja") ||
+            (data.names || []).find((n) => n.language?.name === "ja-Hrkt");
+          setText("pokemon-name-ja", jaEntry?.name || "-");
+        } catch (error) {
+          setText("pokemon-name-ja", "-");
+          errorBox.textContent = "日本語名の取得に失敗しました。";
+        }
+      };
+
+      document.body.addEventListener("htmx:afterOnLoad", (event) => {
+        if (event.detail.elt.tagName !== "FORM") return;
+        const errorBox = document.getElementById("pokemon-error");
+        try {
+          const data = JSON.parse(event.detail.xhr.responseText);
+          setText("pokemon-name", data.name ?? "-");
+          setText("pokemon-id", data.id ?? "-");
+          setText("pokemon-height", data.height ?? "-");
+          setText("pokemon-weight", data.weight ?? "-");
+          setText(
+            "pokemon-types",
+            (data.types || [])
+              .map((t) => t.type?.name)
+              .filter(Boolean)
+              .join(", ") || "-"
+          );
+          setText(
+            "pokemon-abilities",
+            (data.abilities || [])
+              .map((a) => a.ability?.name)
+              .filter(Boolean)
+              .join(", ") || "-"
+          );
+          setText(
+            "pokemon-stats",
+            (data.stats || [])
+              .map((s) => `${s.stat?.name}: ${s.base_stat}`)
+              .filter(Boolean)
+              .join(", ") || "-"
+          );
+          setSprite(data.sprites?.front_default);
+          errorBox.textContent = "";
+          fetchJapaneseName(data.id);
+        } catch (error) {
+          errorBox.textContent = "データの取得またはパースに失敗しました。";
+        }
+      });
+    </script>
   </body>
 </html>
