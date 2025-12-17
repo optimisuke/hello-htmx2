@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <script src="https://unpkg.com/mustache@latest"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12/dist/ext/path-params.js"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12/dist/ext/client-side-templates.js"></script>
+  </head>
+  <body>
+    <h1>シンプルPokédex</h1>
+    <form
+      hx-ext="path-params,client-side-templates"
+      mustache-template="pokemon-template"
+      hx-get="https://pokeapi.co/api/v2/pokemon/{id}"
+      hx-target="#result"
+      hx-swap="innerHTML"
+    >
+      <label>
+        ポケモンID:
+        <input
+          name="id"
+          type="number"
+          min="1"
+          required
+          placeholder="例: 25"
+        />
+      </label>
+      <button type="submit">取得</button>
+    </form>
+
+    <section id="result" aria-live="polite">
+      <p>まだポケモンが選ばれていません。</p>
+    </section>
+
+    <template id="pokemon-template">
+      <article>
+        <h2>{{name}} (No. {{id}})</h2>
+        {{#sprites.front_default}}
+        <img
+          src="{{sprites.front_default}}"
+          alt="{{name}}"
+          width="96"
+          height="96"
+        />
+        {{/sprites.front_default}}
+        <ul>
+          <li>高さ: {{height}} dm</li>
+          <li>重さ: {{weight}} hg</li>
+        </ul>
+        <p>
+          タイプ:
+          {{#types}}{{type.name}} {{/types}}{{^types}}-{{/types}}
+        </p>
+        <p>
+          とくせい:
+          {{#abilities}}{{ability.name}} {{/abilities}}{{^abilities}}-{{/abilities}}
+        </p>
+        <p>
+          ステータス:
+          {{#stats}}{{stat.name}}: {{base_stat}} ｜ {{/stats}}{{^stats}}-{{/stats}}
+        </p>
+      </article>
+    </template>
+  </body>
+</html>
