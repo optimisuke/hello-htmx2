@@ -2,95 +2,154 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/htmx.org@1.9.12"></script>
     <script src="https://unpkg.com/mustache@latest"></script>
     <script src="https://unpkg.com/htmx.org@1.9.12/dist/ext/path-params.js"></script>
     <script src="https://unpkg.com/htmx.org@1.9.12/dist/ext/client-side-templates.js"></script>
   </head>
-  <body>
-    <form
-      hx-ext="path-params,client-side-templates"
-      mustache-template="pokemon-template"
-      hx-get="https://pokeapi.co/api/v2/pokemon/{id}"
-      hx-target="#result"
-      hx-swap="innerHTML"
-    >
-      <input
-        name="id"
-        type="number"
-        min="1"
-        required
-        placeholder="ポケモンID"
-      />
-      <button type="submit">取得</button>
-    </form>
+  <body
+    class="min-h-screen bg-gradient-to-br from-yellow-50 via-amber-50 to-sky-50 text-slate-900"
+  >
+    <div class="max-w-3xl mx-auto px-4 py-12 space-y-6">
+      <header class="space-y-2">
+        <p
+          class="inline-flex items-center gap-2 text-sm font-semibold text-amber-700"
+        >
+          <span
+            class="inline-block h-2 w-2 rounded-full bg-amber-600 animate-pulse"
+          ></span>
+          Pokede-htmx
+        </p>
+        <h1 class="text-3xl font-bold tracking-tight">生き物図鑑</h1>
+        <p class="text-slate-700">
+          IDを入力すると、タイプやとくせいをさくっとチェックできます。
+        </p>
+      </header>
 
-    <section id="result"></section>
+      <form
+        class="flex flex-col gap-3 sm:flex-row sm:items-center bg-white/80 backdrop-blur border border-amber-100 shadow-lg rounded-2xl px-4 py-3"
+        hx-ext="path-params,client-side-templates"
+        mustache-template="pokemon-template"
+        hx-get="https://pokeapi.co/api/v2/pokemon/{id}"
+        hx-target="#result"
+        hx-swap="innerHTML"
+      >
+        <label class="flex-1 text-sm font-semibold text-slate-700">
+          ID
+          <input
+            class="mt-1 w-full rounded-xl border border-amber-100 bg-white px-3 py-2 text-base shadow-inner focus:border-amber-300 focus:ring-2 focus:ring-amber-200 outline-none transition"
+            name="id"
+            type="number"
+            min="1"
+            required
+            placeholder="例: 25"
+          />
+        </label>
+        <button
+          type="submit"
+          class="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-3 text-white font-semibold shadow-md hover:bg-amber-600 transition focus:outline-none focus:ring-4 focus:ring-amber-200"
+        >
+          取得
+          <span class="htmx-indicator text-sm">読み込み中...</span>
+        </button>
+      </form>
+
+      <section id="result" class="min-h-[120px]" aria-live="polite">
+        <div class="text-slate-600">まだ選ばれていません。</div>
+      </section>
+    </div>
 
     <template id="pokemon-template">
-      <table border="1" cellpadding="6" cellspacing="0">
-        <thead>
-          <tr>
-            <th colspan="2">ポケモン情報</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <th>名前</th>
-            <td>{{name}}</td>
-          </tr>
-          <tr>
-            <th>ID</th>
-            <td>{{id}}</td>
-          </tr>
-          <tr>
-            <th>高さ</th>
-            <td>{{height}}</td>
-          </tr>
-          <tr>
-            <th>重さ</th>
-            <td>{{weight}}</td>
-          </tr>
+      <article
+        class="bg-white/90 backdrop-blur border border-amber-100 shadow-xl rounded-2xl overflow-hidden"
+      >
+        <div
+          class="flex items-center justify-between gap-4 px-6 py-5 bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-200"
+        >
+          <div class="space-y-1">
+            <p
+              class="text-xs font-semibold uppercase tracking-[0.16em] text-amber-800"
+            >
+              Pokemon
+            </p>
+            <h2 class="text-2xl font-bold text-slate-900">{{name}}</h2>
+            <p class="text-sm font-semibold text-amber-800">No. {{id}}</p>
+          </div>
+          {{#sprites.front_default}}
+          <img
+            src="{{sprites.front_default}}"
+            alt="{{name}}"
+            class="h-24 w-24 drop-shadow-lg"
+          />
+          {{/sprites.front_default}}
+        </div>
 
-          <tr>
-            <th>タイプ</th>
-            <td>
-              {{#types}}{{type.name}}<br />{{/types}} {{^types}}-{{/types}}
-            </td>
-          </tr>
+        <div class="p-6 space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div
+              class="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3"
+            >
+              <p class="text-xs uppercase text-slate-500 font-semibold">高さ</p>
+              <p class="text-lg font-semibold text-slate-900">{{height}} dm</p>
+            </div>
+            <div
+              class="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3"
+            >
+              <p class="text-xs uppercase text-slate-500 font-semibold">重さ</p>
+              <p class="text-lg font-semibold text-slate-900">{{weight}} hg</p>
+            </div>
+          </div>
 
-          <tr>
-            <th>とくせい</th>
-            <td>
-              {{#abilities}}{{ability.name}}<br />{{/abilities}}
-              {{^abilities}}-{{/abilities}}
-            </td>
-          </tr>
+          <div class="space-y-1">
+            <p class="text-xs uppercase text-slate-500 font-semibold">タイプ</p>
+            <div class="flex flex-wrap gap-2">
+              {{#types}}
+              <span
+                class="px-3 py-1 rounded-full bg-sky-600 text-white text-sm font-semibold shadow-sm"
+              >
+                {{type.name}}
+              </span>
+              {{/types}} {{^types}}<span class="text-slate-500">-</span
+              >{{/types}}
+            </div>
+          </div>
 
-          <tr>
-            <th>ステータス</th>
-            <td>
-              {{#stats}}{{stat.name}}: {{base_stat}}<br />{{/stats}}
-              {{^stats}}-{{/stats}}
-            </td>
-          </tr>
+          <div class="space-y-1">
+            <p class="text-xs uppercase text-slate-500 font-semibold">
+              とくせい
+            </p>
+            <div class="flex flex-wrap gap-2">
+              {{#abilities}}
+              <span
+                class="px-3 py-1 rounded-full bg-amber-500 text-white text-sm font-semibold shadow-sm"
+              >
+                {{ability.name}}
+              </span>
+              {{/abilities}} {{^abilities}}<span class="text-slate-500">-</span
+              >{{/abilities}}
+            </div>
+          </div>
 
-          <tr>
-            <th>アイコン</th>
-            <td>
-              {{#sprites.front_default}}
-              <img
-                src="{{sprites.front_default}}"
-                alt="{{name}}"
-                width="96"
-                height="96"
-              />
-              {{/sprites.front_default}}
-              {{^sprites.front_default}}-{{/sprites.front_default}}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+          <div class="space-y-1">
+            <p class="text-xs uppercase text-slate-500 font-semibold">
+              ステータス
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {{#stats}}
+              <div
+                class="flex items-center justify-between rounded-lg border border-slate-100 bg-white px-3 py-2 text-sm font-semibold text-slate-800"
+              >
+                <span>{{stat.name}}</span>
+                <span>{{base_stat}}</span>
+              </div>
+              {{/stats}} {{^stats}}<span class="text-slate-500">-</span
+              >{{/stats}}
+            </div>
+          </div>
+        </div>
+      </article>
     </template>
   </body>
 </html>
