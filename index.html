@@ -3,14 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <script src="https://unpkg.com/mustache@latest"></script>
     <script src="https://unpkg.com/htmx.org@1.9.12/dist/ext/path-params.js"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12/dist/ext/client-side-templates.js"></script>
   </head>
   <body>
     <form
-      hx-ext="path-params"
+      hx-ext="path-params,client-side-templates"
+      mustache-template="pokemon-template"
       hx-get="https://pokeapi.co/api/v2/pokemon/{id}"
       hx-target="#result"
-      hx-swap="none"
+      hx-swap="innerHTML"
     >
       <input
         name="id"
@@ -22,7 +25,9 @@
       <button type="submit">取得</button>
     </form>
 
-    <section id="result">
+    <section id="result"></section>
+
+    <template id="pokemon-template">
       <table border="1" cellpadding="6" cellspacing="0">
         <thead>
           <tr>
@@ -31,115 +36,61 @@
         </thead>
         <tbody>
           <tr>
-            <th scope="row">名前</th>
-            <td id="pokemon-name">-</td>
+            <th>名前</th>
+            <td>{{name}}</td>
           </tr>
           <tr>
-            <th scope="row">日本語名</th>
-            <td id="pokemon-name-ja">-</td>
+            <th>ID</th>
+            <td>{{id}}</td>
           </tr>
           <tr>
-            <th scope="row">ID</th>
-            <td id="pokemon-id">-</td>
+            <th>高さ</th>
+            <td>{{height}}</td>
           </tr>
           <tr>
-            <th scope="row">高さ</th>
-            <td id="pokemon-height">-</td>
+            <th>重さ</th>
+            <td>{{weight}}</td>
           </tr>
+
           <tr>
-            <th scope="row">重さ</th>
-            <td id="pokemon-weight">-</td>
+            <th>タイプ</th>
+            <td>
+              {{#types}}{{type.name}}<br />{{/types}} {{^types}}-{{/types}}
+            </td>
           </tr>
+
           <tr>
-            <th scope="row">タイプ</th>
-            <td id="pokemon-types">-</td>
+            <th>とくせい</th>
+            <td>
+              {{#abilities}}{{ability.name}}<br />{{/abilities}}
+              {{^abilities}}-{{/abilities}}
+            </td>
           </tr>
+
           <tr>
-            <th scope="row">とくせい</th>
-            <td id="pokemon-abilities">-</td>
+            <th>ステータス</th>
+            <td>
+              {{#stats}}{{stat.name}}: {{base_stat}}<br />{{/stats}}
+              {{^stats}}-{{/stats}}
+            </td>
           </tr>
+
           <tr>
-            <th scope="row">ステータス</th>
-            <td id="pokemon-stats">-</td>
-          </tr>
-          <tr>
-            <th scope="row">アイコン</th>
-            <td id="pokemon-sprite">-</td>
+            <th>アイコン</th>
+            <td>
+              {{#sprites.front_default}}
+              <img
+                src="{{sprites.front_default}}"
+                alt="{{name}}"
+                width="96"
+                height="96"
+              />
+              {{/sprites.front_default}}
+              {{^sprites.front_default}}-{{/sprites.front_default}}
+            </td>
           </tr>
         </tbody>
       </table>
-      <p id="pokemon-error" style="color: red"></p>
-    </section>
-
-    <script>
-      const setText = (id, text) => {
-        const cell = document.getElementById(id);
-        cell.textContent = text;
-      };
-
-      const setSprite = (url) => {
-        const cell = document.getElementById("pokemon-sprite");
-        cell.innerHTML = url
-          ? `<img src="${url}" alt="ポケモンの画像" width="96" height="96" />`
-          : "-";
-      };
-
-      const fetchJapaneseName = async (pokemonId) => {
-        const errorBox = document.getElementById("pokemon-error");
-        setText("pokemon-name-ja", "読み込み中...");
-        try {
-          const res = await fetch(
-            `https://pokeapi.co/api/v2/pokemon-species/${pokemonId}`
-          );
-          if (!res.ok) throw new Error("species fetch failed");
-          const data = await res.json();
-          const jaEntry =
-            (data.names || []).find((n) => n.language?.name === "ja") ||
-            (data.names || []).find((n) => n.language?.name === "ja-Hrkt");
-          setText("pokemon-name-ja", jaEntry?.name || "-");
-        } catch (error) {
-          setText("pokemon-name-ja", "-");
-          errorBox.textContent = "日本語名の取得に失敗しました。";
-        }
-      };
-
-      document.body.addEventListener("htmx:afterOnLoad", (event) => {
-        if (event.detail.elt.tagName !== "FORM") return;
-        const errorBox = document.getElementById("pokemon-error");
-        try {
-          const data = JSON.parse(event.detail.xhr.responseText);
-          setText("pokemon-name", data.name ?? "-");
-          setText("pokemon-id", data.id ?? "-");
-          setText("pokemon-height", data.height ?? "-");
-          setText("pokemon-weight", data.weight ?? "-");
-          setText(
-            "pokemon-types",
-            (data.types || [])
-              .map((t) => t.type?.name)
-              .filter(Boolean)
-              .join(", ") || "-"
-          );
-          setText(
-            "pokemon-abilities",
-            (data.abilities || [])
-              .map((a) => a.ability?.name)
-              .filter(Boolean)
-              .join(", ") || "-"
-          );
-          setText(
-            "pokemon-stats",
-            (data.stats || [])
-              .map((s) => `${s.stat?.name}: ${s.base_stat}`)
-              .filter(Boolean)
-              .join(", ") || "-"
-          );
-          setSprite(data.sprites?.front_default);
-          errorBox.textContent = "";
-          fetchJapaneseName(data.id);
-        } catch (error) {
-          errorBox.textContent = "データの取得またはパースに失敗しました。";
-        }
-      });
-    </script>
+    </template>
   </body>
 </html>
