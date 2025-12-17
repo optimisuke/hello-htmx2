@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12/dist/ext/path-params.js"></script>
+  </head>
+  <body>
+    <form
+      hx-ext="path-params"
+      hx-get="https://pokeapi.co/api/v2/pokemon/{id}"
+      hx-target="#result"
+    >
+      <input
+        name="id"
+        type="number"
+        min="1"
+        required
+        placeholder="ポケモンID"
+      />
+      <button type="submit">取得</button>
+    </form>
+
+    <pre id="result"></pre>
+  </body>
+</html>
